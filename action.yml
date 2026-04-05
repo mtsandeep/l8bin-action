@@ -1,0 +1,60 @@
+name: 'Deploy to LiteBin'
+description: 'Build and deploy your app to LiteBin — works with or without a Dockerfile'
+
+inputs:
+  server:
+    description: 'LiteBin server URL (e.g. https://l8bin.com)'
+    required: true
+  token:
+    description: 'Deploy token (create one in the LiteBin dashboard)'
+    required: true
+  project_id:
+    description: 'Project ID (used as subdomain)'
+    required: true
+  port:
+    description: 'Internal port the app listens on'
+    required: false
+    default: '3000'
+  dockerfile:
+    description: 'Custom Dockerfile path (auto-detected if omitted)'
+    required: false
+    default: ''
+  cmd:
+    description: 'Custom command to run in the container'
+    required: false
+    default: ''
+  memory:
+    description: 'Memory limit in MB'
+    required: false
+    default: ''
+  cpu:
+    description: 'CPU limit (0.0 - 1.0)'
+    required: false
+    default: ''
+  node_id:
+    description: 'Target node ID'
+    required: false
+    default: ''
+
+outputs:
+  url:
+    description: 'URL of the deployed application'
+    value: ${{ steps.deploy.outputs.url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Build and deploy
+      id: deploy
+      shell: bash
+      env:
+        L8B_SERVER: ${{ inputs.server }}
+        L8B_TOKEN: ${{ inputs.token }}
+        L8B_PROJECT_ID: ${{ inputs.project_id }}
+        L8B_PORT: ${{ inputs.port }}
+        L8B_DOCKERFILE: ${{ inputs.dockerfile }}
+        L8B_CMD: ${{ inputs.cmd }}
+        L8B_MEMORY: ${{ inputs.memory }}
+        L8B_CPU: ${{ inputs.cpu }}
+        L8B_NODE_ID: ${{ inputs.node_id }}
+      run: $GITHUB_ACTION_PATH/deploy.sh
