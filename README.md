@@ -1,4 +1,4 @@
-# LiteBin GitHub Action
+# LiteBin | L8Bin GitHub Action
 
 Deploy your app to LiteBin directly from GitHub Actions — no Docker registry needed.
 
@@ -20,8 +20,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: litebin/litebin-action@v1
         with:
-          server: ${{ secrets.LITEBIN_SERVER }}
-          token: ${{ secrets.LITEBIN_TOKEN }}
+          server: ${{ secrets.L8BIN_SERVER }}
+          token: ${{ secrets.L8BIN_TOKEN }}
           project_id: myapp
           port: '3000'
 ```
@@ -30,8 +30,8 @@ jobs:
 
 | Secret | Description |
 |--------|-------------|
-| `LITEBIN_SERVER` | Your LiteBin server URL (e.g. `https://l8bin.com`) |
-| `LITEBIN_TOKEN` | Deploy token from the LiteBin dashboard (per-project) |
+| `L8BIN_SERVER` | Your LiteBin server URL (e.g. `https://l8bin.com`) |
+| `L8BIN_TOKEN` | Deploy token from the LiteBin dashboard (per-project) |
 
 ## Inputs
 
@@ -67,8 +67,8 @@ jobs:
 ```yaml
 - uses: litebin/litebin-action@v1
   with:
-    server: ${{ secrets.LITEBIN_SERVER }}
-    token: ${{ secrets.LITEBIN_TOKEN }}
+    server: ${{ secrets.L8BIN_SERVER }}
+    token: ${{ secrets.L8BIN_TOKEN }}
     project_id: myapp
     dockerfile: docker/Dockerfile.prod
 ```
@@ -78,8 +78,8 @@ jobs:
 ```yaml
 - uses: litebin/litebin-action@v1
   with:
-    server: ${{ secrets.LITEBIN_SERVER }}
-    token: ${{ secrets.LITEBIN_TOKEN }}
+    server: ${{ secrets.L8BIN_SERVER }}
+    token: ${{ secrets.L8BIN_TOKEN }}
     project_id: myapp
     port: '8080'
     memory: '512'
@@ -91,8 +91,8 @@ jobs:
 ```yaml
 - uses: litebin/litebin-action@v1
   with:
-    server: ${{ secrets.LITEBIN_SERVER }}
-    token: ${{ secrets.LITEBIN_TOKEN }}
+    server: ${{ secrets.L8BIN_SERVER }}
+    token: ${{ secrets.L8BIN_TOKEN }}
     project_id: myapp
     node_id: node-2
 ```
