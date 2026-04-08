@@ -1,4 +1,4 @@
-name: 'Deploy to LiteBin'
+name: 'Deploy to LiteBin | L8Bin'
 description: 'Build and deploy your app to LiteBin — works with or without a Dockerfile'
 
 inputs:
@@ -35,6 +35,10 @@ inputs:
     description: 'Target node ID'
     required: false
     default: ''
+  path:
+    description: 'Path to the project directory (default: repo root)'
+    required: false
+    default: '.'
 
 outputs:
   url:
@@ -57,4 +61,5 @@ runs:
         L8B_MEMORY: ${{ inputs.memory }}
         L8B_CPU: ${{ inputs.cpu }}
         L8B_NODE_ID: ${{ inputs.node_id }}
+        L8B_PATH: ${{ inputs.path }}
       run: $GITHUB_ACTION_PATH/deploy.sh

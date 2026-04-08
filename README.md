@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: litebin/litebin-action@v1
+      - uses: mtsandeep/l8bin-action@v1
         with:
-          server: ${{ secrets.L8BIN_SERVER }}
-          token: ${{ secrets.L8BIN_TOKEN }}
+          server: ${{ secrets.L8B_SERVER }}
+          token: ${{ secrets.L8B_TOKEN }}
           project_id: myapp
           port: '3000'
 ```
@@ -30,8 +30,8 @@ jobs:
 
 | Secret | Description |
 |--------|-------------|
-| `L8BIN_SERVER` | Your LiteBin server URL (e.g. `https://l8bin.com`) |
-| `L8BIN_TOKEN` | Deploy token from the LiteBin dashboard (per-project) |
+| `L8B_SERVER` | Your LiteBin server URL (e.g. `https://l8bin.example.com`) |
+| `L8B_TOKEN` | Deploy token from the LiteBin dashboard (per-project) |
 
 ## Inputs
 
@@ -41,6 +41,7 @@ jobs:
 | `token` | Yes | | Deploy token |
 | `project_id` | Yes | | Project ID (used as subdomain) |
 | `port` | No | `3000` | Internal port your app listens on |
+| `path` | No | `.` | Path to the project directory |
 | `dockerfile` | No | | Custom Dockerfile path (auto-detected if omitted) |
 | `cmd` | No | | Custom command to run in the container |
 | `memory` | No | | Memory limit in MB |
@@ -65,10 +66,10 @@ jobs:
 ### Custom Dockerfile
 
 ```yaml
-- uses: litebin/litebin-action@v1
+- uses: mtsandeep/l8bin-action@v1
   with:
-    server: ${{ secrets.L8BIN_SERVER }}
-    token: ${{ secrets.L8BIN_TOKEN }}
+    server: ${{ secrets.L8B_SERVER }}
+    token: ${{ secrets.L8B_TOKEN }}
     project_id: myapp
     dockerfile: docker/Dockerfile.prod
 ```
@@ -76,10 +77,10 @@ jobs:
 ### With resource limits
 
 ```yaml
-- uses: litebin/litebin-action@v1
+- uses: mtsandeep/l8bin-action@v1
   with:
-    server: ${{ secrets.L8BIN_SERVER }}
-    token: ${{ secrets.L8BIN_TOKEN }}
+    server: ${{ secrets.L8B_SERVER }}
+    token: ${{ secrets.L8B_TOKEN }}
     project_id: myapp
     port: '8080'
     memory: '512'
@@ -89,13 +90,26 @@ jobs:
 ### Deploy to a specific node
 
 ```yaml
-- uses: litebin/litebin-action@v1
+- uses: mtsandeep/l8bin-action@v1
   with:
-    server: ${{ secrets.L8BIN_SERVER }}
-    token: ${{ secrets.L8BIN_TOKEN }}
+    server: ${{ secrets.L8B_SERVER }}
+    token: ${{ secrets.L8B_TOKEN }}
     project_id: myapp
     node_id: node-2
 ```
+
+### Monorepo / subdirectory
+
+```yaml
+- uses: mtsandeep/l8bin-action@v1
+  with:
+    server: ${{ secrets.L8B_SERVER }}
+    token: ${{ secrets.L8B_TOKEN }}
+    project_id: myapp
+    path: apps/frontend
+```
+
+Use `path` when your app lives in a subdirectory of the repo. The action will build from that directory instead of the repo root.
 
 ## Getting a Deploy Token
 

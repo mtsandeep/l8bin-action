@@ -11,6 +11,7 @@ CMD="${L8B_CMD:-}"
 MEMORY="${L8B_MEMORY:-}"
 CPU="${L8B_CPU:-}"
 NODE_ID="${L8B_NODE_ID:-}"
+PATH_DIR="${L8B_PATH:-.}"
 
 IMAGE_TAG="l8b/${PROJECT_ID}:latest"
 TAR_PATH="/tmp/l8b-${PROJECT_ID}.tar"
@@ -34,10 +35,10 @@ SERVER="${SERVER%/}"
 # --- Step 1: Build image ---
 if [ -n "$DOCKERFILE" ]; then
   echo "::group::Building with Docker"
-  docker build -f "$DOCKERFILE" -t "$IMAGE_TAG" .
+  docker build -f "$DOCKERFILE" -t "$IMAGE_TAG" "$PATH_DIR"
 elif [ -f Dockerfile ]; then
   echo "::group::Building with Docker"
-  docker build -t "$IMAGE_TAG" .
+  docker build -t "$IMAGE_TAG" "$PATH_DIR"
 else
   echo "::group::No Dockerfile found — installing Railpack"
   curl -sSL https://railpack.io/install.sh | bash
@@ -45,7 +46,7 @@ else
   echo "::endgroup::"
 
   echo "::group::Building with Railpack"
-  railpack build -t "$IMAGE_TAG" .
+  railpack build -t "$IMAGE_TAG" "$PATH_DIR"
 fi
 echo "::endgroup::"
 
