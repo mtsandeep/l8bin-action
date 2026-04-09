@@ -6,124 +6,44 @@ SERVER="${L8B_SERVER}"
 TOKEN="${L8B_TOKEN}"
 PROJECT_ID="${L8B_PROJECT_ID}"
 PORT="${L8B_PORT:-3000}"
+PATH_DIR="${L8B_PATH:-.}"
+
+# Optional
 DOCKERFILE="${L8B_DOCKERFILE:-}"
 CMD="${L8B_CMD:-}"
 MEMORY="${L8B_MEMORY:-}"
 CPU="${L8B_CPU:-}"
 NODE_ID="${L8B_NODE_ID:-}"
-PATH_DIR="${L8B_PATH:-.}"
 
-IMAGE_TAG="l8b/${PROJECT_ID}:latest"
-TAR_PATH="/tmp/l8b-${PROJECT_ID}.tar"
+# --- Validate ---
+if [ -z "$SERVER" ]; then echo "::error::server is required"; exit 1; fi
+if [ -z "$TOKEN" ]; then echo "::error::token is required"; exit 1; fi
+if [ -z "$PROJECT_ID" ]; then echo "::error::project_id is required"; exit 1; fi
 
-# --- Validate required inputs ---
-if [ -z "$SERVER" ]; then
-  echo "::error::server is required"
-  exit 1
-fi
-if [ -z "$TOKEN" ]; then
-  echo "::error::token is required"
-  exit 1
-fi
-if [ -z "$PROJECT_ID" ]; then
-  echo "::error::project_id is required"
-  exit 1
-fi
-
-SERVER="${SERVER%/}"
-
-# --- Step 1: Build image ---
-if [ -n "$DOCKERFILE" ]; then
-  echo "::group::Building with Docker"
-  docker build -f "$DOCKERFILE" -t "$IMAGE_TAG" "$PATH_DIR"
-elif [ -f Dockerfile ]; then
-  echo "::group::Building with Docker"
-  docker build -t "$IMAGE_TAG" "$PATH_DIR"
+# --- Install l8b CLI ---
+echo "::group::Installing l8b CLI"
+ARCH=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+  ARCH="aarch64"
 else
-  echo "::group::No Dockerfile found — installing Railpack"
-  RAILPACK_VERSION=$(curl -sfL https://api.github.com/repos/railwayapp/railpack/releases/latest | jq -r '.tag_name')
-  ARCH=$(uname -m)
-  if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-    RAILPACK_ARCH="arm64"
-  else
-    RAILPACK_ARCH="x86_64"
-  fi
-  RAILPACK_ASSET="railpack-${RAILPACK_VERSION}-${RAILPACK_ARCH}-unknown-linux-musl.tar.gz"
-  RAILPACK_URL="https://github.com/railwayapp/railpack/releases/download/${RAILPACK_VERSION}/${RAILPACK_ASSET}"
-  curl -sfL "$RAILPACK_URL" | tar xz -C /usr/local/bin railpack
-  echo "Railpack ${RAILPACK_VERSION} installed"
-  echo "::endgroup::"
-
-  echo "::group::Building with Railpack"
-  railpack build --name "$IMAGE_TAG" "$PATH_DIR"
+  ARCH="x86_64"
 fi
+L8B_URL="https://github.com/mtsandeep/l8bin/releases/latest/download/l8b-${ARCH}-linux"
+curl -sfL "$L8B_URL" -o /usr/local/bin/l8b
+chmod +x /usr/local/bin/l8b
+echo "l8b $(l8b --version 2>&1 | head -1) installed"
 echo "::endgroup::"
 
-# --- Step 2: Save image as tar ---
-echo "::group::Saving image"
-docker save -o "$TAR_PATH" "$IMAGE_TAG"
-echo "Image saved ($(du -h "$TAR_PATH" | cut -f1))"
+# --- Configure ---
+l8b config set --server "${SERVER%/}" --token "$TOKEN"
+
+# --- Deploy ---
+echo "::group::Deploying ${PROJECT_ID}"
+DEPLOY_ARGS=("--project" "$PROJECT_ID" "--port" "$PORT" "--path" "$PATH_DIR")
+if [ -n "$DOCKERFILE" ]; then DEPLOY_ARGS+=("--dockerfile" "$DOCKERFILE"); fi
+if [ -n "$CMD" ]; then DEPLOY_ARGS+=("--cmd" "$CMD"); fi
+if [ -n "$MEMORY" ]; then DEPLOY_ARGS+=("--memory" "$MEMORY"); fi
+if [ -n "$CPU" ]; then DEPLOY_ARGS+=("--cpu" "$CPU"); fi
+if [ -n "$NODE_ID" ]; then DEPLOY_ARGS+=("--node" "$NODE_ID"); fi
+l8b deploy "${DEPLOY_ARGS[@]}"
 echo "::endgroup::"
-
-# --- Step 3: Upload image ---
-echo "::group::Uploading image to LiteBin"
-UPLOAD_URL="${SERVER}/images/upload?project_id=${PROJECT_ID}"
-if [ -n "$NODE_ID" ]; then
-  UPLOAD_URL="${UPLOAD_URL}&node_id=${NODE_ID}"
-fi
-
-UPLOAD_RESP=$(curl -sf -X POST "$UPLOAD_URL" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/x-tar" \
-  --data-binary "@${TAR_PATH}")
-
-IMAGE_ID=$(echo "$UPLOAD_RESP" | jq -r '.image_id')
-
-if [ -z "$IMAGE_ID" ] || [ "$IMAGE_ID" = "null" ]; then
-  echo "::error::Upload failed — no image_id in response: ${UPLOAD_RESP}"
-  exit 1
-fi
-
-echo "Image uploaded (id: ${IMAGE_ID})"
-echo "::endgroup::"
-
-# --- Step 4: Deploy ---
-echo "::group::Deploying"
-DEPLOY_BODY=$(jq -n \
-  --arg project_id "$PROJECT_ID" \
-  --arg image "$IMAGE_ID" \
-  --argjson port "$PORT" \
-  '{project_id: $project_id, image: $image, port: $port, auto_stop_enabled: true}')
-
-if [ -n "$CMD" ]; then
-  DEPLOY_BODY=$(echo "$DEPLOY_BODY" | jq --arg cmd "$CMD" '. + {cmd: $cmd}')
-fi
-if [ -n "$MEMORY" ]; then
-  DEPLOY_BODY=$(echo "$DEPLOY_BODY" | jq --argjson memory "$MEMORY" '. + {memory_limit_mb: $memory}')
-fi
-if [ -n "$CPU" ]; then
-  DEPLOY_BODY=$(echo "$DEPLOY_BODY" | jq --argjson cpu "$CPU" '. + {cpu_limit: $cpu}')
-fi
-if [ -n "$NODE_ID" ]; then
-  DEPLOY_BODY=$(echo "$DEPLOY_BODY" | jq --arg node_id "$NODE_ID" '. + {node_id: $node_id}')
-fi
-
-DEPLOY_RESP=$(curl -sf -X POST "${SERVER}/deploy" \
-  -H "Authorization: Bearer ${TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "$DEPLOY_BODY")
-
-DEPLOY_URL=$(echo "$DEPLOY_RESP" | jq -r '.url')
-
-if [ -z "$DEPLOY_URL" ] || [ "$DEPLOY_URL" = "null" ]; then
-  echo "::error::Deploy failed — no url in response: ${DEPLOY_RESP}"
-  exit 1
-fi
-echo "::endgroup::"
-
-# --- Step 5: Output ---
-echo "Deployed! ${DEPLOY_URL}"
-echo "url=${DEPLOY_URL}" >> "$GITHUB_OUTPUT"
-
-# --- Cleanup ---
-rm -f "$TAR_PATH"
