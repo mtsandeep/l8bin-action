@@ -41,12 +41,21 @@ elif [ -f Dockerfile ]; then
   docker build -t "$IMAGE_TAG" "$PATH_DIR"
 else
   echo "::group::No Dockerfile found — installing Railpack"
-  curl -sSL https://railpack.io/install.sh | bash
-  export PATH="$HOME/.local/bin:$PATH"
+  RAILPACK_VERSION=$(curl -sfL https://api.github.com/repos/railwayapp/railpack/releases/latest | jq -r '.tag_name')
+  ARCH=$(uname -m)
+  if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+    RAILPACK_ARCH="arm64"
+  else
+    RAILPACK_ARCH="x86_64"
+  fi
+  RAILPACK_ASSET="railpack-${RAILPACK_VERSION}-${RAILPACK_ARCH}-unknown-linux-musl.tar.gz"
+  RAILPACK_URL="https://github.com/railwayapp/railpack/releases/download/${RAILPACK_VERSION}/${RAILPACK_ASSET}"
+  curl -sfL "$RAILPACK_URL" | tar xz -C /usr/local/bin railpack
+  echo "Railpack ${RAILPACK_VERSION} installed"
   echo "::endgroup::"
 
   echo "::group::Building with Railpack"
-  railpack build -t "$IMAGE_TAG" "$PATH_DIR"
+  railpack build --name "$IMAGE_TAG" "$PATH_DIR"
 fi
 echo "::endgroup::"
 
