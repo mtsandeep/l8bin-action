@@ -20,6 +20,10 @@ if [ -z "$SERVER" ]; then echo "::error::server is required"; exit 1; fi
 if [ -z "$TOKEN" ]; then echo "::error::token is required"; exit 1; fi
 if [ -z "$PROJECT_ID" ]; then echo "::error::project_id is required"; exit 1; fi
 
+# --- Register secrets with GHA log masking ---
+echo "::add-mask::${TOKEN}"
+echo "::add-mask::${SERVER}"
+
 # --- Install l8b CLI ---
 echo "::group::Installing l8b CLI"
 ARCH=$(uname -m)
@@ -35,7 +39,7 @@ echo "l8b $(l8b --version 2>&1 | head -1) installed"
 echo "::endgroup::"
 
 # --- Configure ---
-l8b config set --server "${SERVER%/}" --token "$TOKEN"
+l8b --ci config set --server "${SERVER%/}" --token "$TOKEN"
 
 # --- Deploy ---
 echo "::group::Deploying ${PROJECT_ID}"
@@ -45,5 +49,5 @@ if [ -n "$CMD" ]; then DEPLOY_ARGS+=("--cmd" "$CMD"); fi
 if [ -n "$MEMORY" ]; then DEPLOY_ARGS+=("--memory" "$MEMORY"); fi
 if [ -n "$CPU" ]; then DEPLOY_ARGS+=("--cpu" "$CPU"); fi
 if [ -n "$NODE_ID" ]; then DEPLOY_ARGS+=("--node" "$NODE_ID"); fi
-l8b deploy "${DEPLOY_ARGS[@]}"
+l8b --ci deploy "${DEPLOY_ARGS[@]}"
 echo "::endgroup::"

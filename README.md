@@ -30,14 +30,14 @@ jobs:
 
 | Secret | Description |
 |--------|-------------|
-| `L8B_SERVER` | Your LiteBin server URL (e.g. `https://l8bin.example.com`) |
+| `L8B_SERVER` | Your LiteBin orchestrator URL — the dashboard/API subdomain (e.g. `https://l8bin.example.com`) |
 | `L8B_TOKEN` | Deploy token from the LiteBin dashboard (per-project) |
 
 ## Inputs
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `server` | Yes | | LiteBin server URL |
+| `server` | Yes | | Orchestrator dashboard URL (e.g. `https://l8bin.example.com`) |
 | `token` | Yes | | Deploy token |
 | `project_id` | Yes | | Project ID (used as subdomain) |
 | `port` | No | `3000` | Internal port your app listens on |

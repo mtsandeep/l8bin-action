@@ -3,7 +3,7 @@ description: 'Build and deploy your app to LiteBin — works with or without a D
 
 inputs:
   server:
-    description: 'LiteBin server URL (e.g. https://l8bin.example.com)'
+    description: 'LiteBin orchestrator URL — the dashboard/API subdomain (e.g. https://l8bin.example.com)'
     required: true
   token:
     description: 'Deploy token (create one in the LiteBin dashboard)'
