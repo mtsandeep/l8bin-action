@@ -29,7 +29,11 @@ esac
 
 # --- Register secrets with GHA log masking ---
 echo "::add-mask::${TOKEN}"
-echo "::add-mask::${SERVER}"
+
+# --- Debug mode: trace every command (token still shows as ***) ---
+if [ "${L8B_DEBUG:-false}" = "true" ]; then
+  set -x
+fi
 
 # --- Install l8b CLI ---
 echo "::group::Installing l8b CLI"

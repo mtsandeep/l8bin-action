@@ -47,6 +47,10 @@ inputs:
     description: 'Path to the project directory (default: repo root)'
     required: false
     default: '.'
+  debug:
+    description: "Set to 'true' to trace every command in the logs (token stays masked)"
+    required: false
+    default: 'false'
 
 outputs:
   url:
@@ -72,4 +76,5 @@ runs:
         L8B_CPU: ${{ inputs.cpu }}
         L8B_NODE_ID: ${{ inputs.node_id }}
         L8B_PATH: ${{ inputs.path }}
+        L8B_DEBUG: ${{ inputs.debug }}
       run: $GITHUB_ACTION_PATH/deploy.sh
