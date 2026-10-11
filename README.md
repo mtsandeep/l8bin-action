@@ -33,6 +33,9 @@ jobs:
 | `L8B_SERVER` | Your LiteBin orchestrator URL — the dashboard/API subdomain (e.g. `https://l8bin.example.com`) |
 | `L8B_TOKEN` | Deploy token from the LiteBin dashboard (per-project) |
 
+> **Tip:** the LiteBin dashboard can set all of this up for you — connect GitHub in
+> `Settings → GitHub`, pick a repo, and LiteBin writes the workflow and secrets itself.
+
 ## Inputs
 
 | Input | Required | Default | Description |
@@ -40,7 +43,9 @@ jobs:
 | `server` | Yes | | Orchestrator dashboard URL (e.g. `https://l8bin.example.com`) |
 | `token` | Yes | | Deploy token |
 | `project_id` | Yes | | Project ID (used as subdomain) |
-| `port` | No | `3000` | Internal port your app listens on |
+| `port` | No | `3000` | Internal port your app listens on (single-service deploys) |
+| `compose` | No | `false` | Set to `true` to force compose mode (auto-detected when a compose file exists) |
+| `services` | No | | Comma-separated target services (compose mode only; empty = all) |
 | `path` | No | `.` | Path to the project directory |
 | `dockerfile` | No | | Custom Dockerfile path (auto-detected if omitted) |
 | `cmd` | No | | Custom command to run in the container |
@@ -52,14 +57,14 @@ jobs:
 
 | Output | Description |
 |--------|-------------|
-| `url` | URL of the deployed application |
+| `url` | URL of the deployed application (empty for background projects) |
 
 ## How It Works
 
-1. **Detects build method** — if a `Dockerfile` exists, uses `docker build`. Otherwise, installs [Railpack](https://railpack.io) and auto-detects your framework.
-2. **Saves the image** as a tar file.
-3. **Uploads** the tar directly to your LiteBin server (no container registry needed).
-4. **Deploys** the image and returns the URL.
+1. **Installs the `l8b` CLI** from the [LiteBin releases](https://github.com/mtsandeep/l8bin/releases).
+2. **Builds your app** — Dockerfile if present, otherwise [Railpack](https://railpack.io) auto-detects your framework. Multi-service repos deploy via docker-compose.
+3. **Uploads** the image directly to your LiteBin server (no container registry needed).
+4. **Deploys** it and reports the live URL as the `url` output.
 
 ## Examples
 
@@ -72,6 +77,18 @@ jobs:
     token: ${{ secrets.L8B_TOKEN }}
     project_id: myapp
     dockerfile: docker/Dockerfile.prod
+```
+
+### Multi-service (docker-compose)
+
+```yaml
+- uses: mtsandeep/l8bin-action@v1
+  with:
+    server: ${{ secrets.L8B_SERVER }}
+    token: ${{ secrets.L8B_TOKEN }}
+    project_id: myapp
+    compose: true
+    services: web,api   # optional — deploy only these services
 ```
 
 ### With resource limits

@@ -9,12 +9,20 @@ inputs:
     description: 'Deploy token (create one in the LiteBin dashboard)'
     required: true
   project_id:
-    description: 'Project ID (used as subdomain)'
     required: true
+    description: 'Project ID (used as subdomain)'
   port:
-    description: 'Internal port the app listens on'
+    description: 'Internal port the app listens on (single-service deploys)'
     required: false
     default: '3000'
+  compose:
+    description: "Set to 'true' to force compose mode (auto-detected when a compose file exists)"
+    required: false
+    default: 'false'
+  services:
+    description: 'Comma-separated target services (compose mode only; empty = all)'
+    required: false
+    default: ''
   dockerfile:
     description: 'Custom Dockerfile path (auto-detected if omitted)'
     required: false
@@ -56,6 +64,8 @@ runs:
         L8B_TOKEN: ${{ inputs.token }}
         L8B_PROJECT_ID: ${{ inputs.project_id }}
         L8B_PORT: ${{ inputs.port }}
+        L8B_COMPOSE: ${{ inputs.compose }}
+        L8B_SERVICES: ${{ inputs.services }}
         L8B_DOCKERFILE: ${{ inputs.dockerfile }}
         L8B_CMD: ${{ inputs.cmd }}
         L8B_MEMORY: ${{ inputs.memory }}
