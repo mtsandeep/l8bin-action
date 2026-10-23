@@ -23,7 +23,6 @@ jobs:
           server: ${{ secrets.L8B_SERVER }}
           token: ${{ secrets.L8B_TOKEN }}
           project_id: myapp
-          port: '3000'
 ```
 
 ### Required Secrets
@@ -43,7 +42,7 @@ jobs:
 | `server` | Yes | | Orchestrator dashboard URL (e.g. `https://l8bin.example.com`) |
 | `token` | Yes | | Deploy token |
 | `project_id` | Yes | | Project ID (used as subdomain) |
-| `port` | No | `3000` | Internal port your app listens on (single-service deploys) |
+| `port` | No | | Internal port your app listens on (single-service deploys); omit to auto-detect from the Dockerfile `EXPOSE` |
 | `compose` | No | `false` | Set to `true` to force compose mode (auto-detected when a compose file exists) |
 | `services` | No | | Comma-separated target services (compose mode only; empty = all) |
 | `path` | No | `.` | Path to the project directory |

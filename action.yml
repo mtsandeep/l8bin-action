@@ -12,9 +12,9 @@ inputs:
     required: true
     description: 'Project ID (used as subdomain)'
   port:
-    description: 'Internal port the app listens on (single-service deploys)'
+    description: 'Internal port the app listens on (single-service deploys); omit to auto-detect from the Dockerfile EXPOSE'
     required: false
-    default: '3000'
+    default: ''
   compose:
     description: "Set to 'true' to force compose mode (auto-detected when a compose file exists)"
     required: false

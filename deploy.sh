@@ -5,7 +5,8 @@ set -euo pipefail
 SERVER="${L8B_SERVER}"
 TOKEN="${L8B_TOKEN}"
 PROJECT_ID="${L8B_PROJECT_ID}"
-PORT="${L8B_PORT:-3000}"
+# Empty = let the CLI detect from the Dockerfile EXPOSE (no silent default).
+PORT="${L8B_PORT:-}"
 PATH_DIR="${L8B_PATH:-.}"
 
 # Optional
@@ -65,7 +66,7 @@ if [ "$COMPOSE_MODE" = "1" ]; then
     done
   fi
 else
-  DEPLOY_ARGS+=("--port" "$PORT")
+  if [ -n "$PORT" ]; then DEPLOY_ARGS+=("--port" "$PORT"); fi
   if [ -n "$DOCKERFILE" ]; then DEPLOY_ARGS+=("--dockerfile" "$DOCKERFILE"); fi
   if [ -n "$CMD" ]; then DEPLOY_ARGS+=("--cmd" "$CMD"); fi
 fi
