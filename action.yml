@@ -48,7 +48,7 @@ inputs:
     required: false
     default: '.'
   debug:
-    description: "Set to 'true' to trace every command in the logs (token stays masked)"
+    description: "Set to 'true' to trace every command (token stays masked). Also enabled automatically when re-running with 'Enable debug logging' (ACTIONS_STEP_DEBUG)"
     required: false
     default: 'false'
 

@@ -32,7 +32,9 @@ esac
 echo "::add-mask::${TOKEN}"
 
 # --- Debug mode: trace every command (token still shows as ***) ---
-if [ "${L8B_DEBUG:-false}" = "true" ]; then
+# Also enabled by GitHub's "Enable debug logging" checkbox on a re-run
+# (the runner then sets ACTIONS_STEP_DEBUG=true — no workflow edit needed).
+if [ "${L8B_DEBUG:-false}" = "true" ] || [ "${ACTIONS_STEP_DEBUG:-}" = "true" ]; then
   set -x
 fi
 
@@ -74,9 +76,19 @@ if [ -n "$MEMORY" ]; then DEPLOY_ARGS+=("--memory" "$MEMORY"); fi
 if [ -n "$CPU" ]; then DEPLOY_ARGS+=("--cpu" "$CPU"); fi
 if [ -n "$NODE_ID" ]; then DEPLOY_ARGS+=("--node" "$NODE_ID"); fi
 
-# JSON mode prints one object on stdout; progress goes to the log via --ci.
-DEPLOY_JSON=$(l8b --ci --json deploy "${DEPLOY_ARGS[@]}")
+# JSON mode prints one object on stdout — errors included. Capture to a file:
+# with set -e, a plain $(...) capture would silently discard the error object
+# when the command fails. stderr (progress in non-JSON mode) streams live.
+DEPLOY_OUT="$(mktemp)"
+if ! l8b --ci --json deploy "${DEPLOY_ARGS[@]}" > "$DEPLOY_OUT"; then
+  echo "::error::l8b deploy failed:"
+  sed 's/^/  /' "$DEPLOY_OUT" >&2
+  rm -f "$DEPLOY_OUT"
+  exit 1
+fi
+DEPLOY_JSON=$(cat "$DEPLOY_OUT")
 echo "${DEPLOY_JSON}"
+rm -f "$DEPLOY_OUT"
 echo "::endgroup::"
 
 # --- Surface the deployed URL as the action output (best effort) ---
